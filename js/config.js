@@ -7,7 +7,10 @@ window.LC_CONFIG = {
   // YouVersion Bible (https://platform.youversion.com) – the app key is NOT secret; it's meant for websites.
   youversion: {
     appKey: "39OdCXVGTinw6x79ibl97ZS2XOCq7VfGvcC0RFAprTnKwNIj",
-    defaultBibleId: 3034,  // 3034 = Berean Standard Bible (public domain)
+    // Versions to offer, in this order (by abbreviation). Each one only shows once it is
+    // licensed for our app key in the YouVersion portal. The first available one is the default.
+    versions: ["NLT", "NIV", "NKJV", "AMP", "ESV"],
+    defaultBibleId: 3034,  // fallback if none of the above are available yet: Berean Standard Bible (public domain)
     language: "en"
   },
 

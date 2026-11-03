@@ -69,11 +69,21 @@
   async function loadVersions() {
     const lang = encodeURIComponent(cfg.language || "en");
     const q = `/bibles?language_ranges[]=${lang}&fields[]=id&fields[]=abbreviation&fields[]=localized_title&page_size=*`;
-    let list = [];
-    try { list = (await yv(q)).data || []; } catch { /* fall back to default only */ }
-    if (!list.some((b) => b.id === bibleId)) bibleId = list.some((b) => b.id === cfg.defaultBibleId) ? cfg.defaultBibleId : (list[0]?.id || bibleId);
-    list.sort((a, b) => (a.abbreviation || "").localeCompare(b.abbreviation || ""));
-    $("sel-version").innerHTML = (list.length ? list : [{ id: bibleId, abbreviation: String(bibleId) }])
+    let all = [];
+    try { all = (await yv(q)).data || []; } catch { /* fall back to default only */ }
+
+    // Only offer the versions we chose (in that order) that are licensed for our key.
+    const wanted = (cfg.versions || []).map((a) => a.toUpperCase());
+    let list = wanted
+      .map((abbr) => all.find((b) => (b.abbreviation || "").toUpperCase() === abbr))
+      .filter(Boolean);
+    if (!list.length) {
+      const fallback = all.find((b) => b.id === cfg.defaultBibleId);
+      list = [fallback || { id: cfg.defaultBibleId, abbreviation: "BSB", localized_title: "Berean Standard Bible" }];
+    }
+    if (!list.some((b) => b.id === bibleId)) bibleId = list[0].id;
+
+    $("sel-version").innerHTML = list
       .map((b) => `<option value="${b.id}">${escapeHtml(b.abbreviation || "")}${b.localized_title ? " – " + escapeHtml(b.localized_title) : ""}</option>`)
       .join("");
     $("sel-version").value = String(bibleId);
