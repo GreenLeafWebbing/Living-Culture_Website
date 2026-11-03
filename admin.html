@@ -92,6 +92,26 @@
 
       <!-- Events -->
       <div class="panel" data-panel="events" hidden>
+        <div class="card form">
+          <h2>Thursday gatherings</h2>
+          <p class="muted info">Tap <strong>Cancel</strong> to call off a single Thursday, or <strong>Restore</strong> to bring it back.</p>
+          <div id="thursday-list" class="thursday-list"></div>
+        </div>
+
+        <form id="break-form" class="card form">
+          <h2>Take a break</h2>
+          <p class="muted info">Cancel every Thursday between two dates – e.g. the December holidays.</p>
+          <div class="field-row three">
+            <label class="field"><span>From</span><input type="date" name="starts_on" required></label>
+            <label class="field"><span>Until</span><input type="date" name="ends_on" required></label>
+            <label class="field"><span>Reason <em>(optional)</em></span><input type="text" name="reason" maxlength="200" placeholder="e.g. December holidays"></label>
+          </div>
+          <button class="btn" type="submit">Save break</button>
+          <p class="form-status" id="break-status" role="status"></p>
+          <div id="break-list" class="admin-list"></div>
+        </form>
+
+        <h2 class="list-title">Special events</h2>
         <p class="muted info">The weekly Thursday 19:00 gathering appears on the calendar automatically – only add special events here.</p>
         <form id="event-form" class="card form">
           <h2 id="event-form-title">New event</h2>

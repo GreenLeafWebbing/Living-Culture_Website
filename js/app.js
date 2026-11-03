@@ -1,6 +1,6 @@
 // Public site: next gathering, notice board, calendar and request form.
 (function () {
-  const { db, esc, richText, fmt, sameDay, dayKey, gatheringOn, nextGathering } = window.LC;
+  const { db, esc, richText, fmt, sameDay, dayKey, gatheringOn, nextGathering, upcomingBreak, loadBreaks } = window.LC;
   const $ = (id) => document.getElementById(id);
 
   $("year").textContent = new Date().getFullYear();
@@ -8,8 +8,20 @@
   /* ---------- Next gathering ---------- */
   function renderNext() {
     const g = nextGathering();
-    if (!g) return;
     const now = new Date();
+    const br = upcomingBreak(now);
+    const card = document.querySelector(".next-card");
+    card.classList.toggle("on-break", !!br);
+    if (br) {
+      $("next-label").textContent = br.starts_on === br.ends_on ? "No gathering this week" : "We're on a break";
+      $("next-day").textContent = g ? `Back on ${fmt.day(g.start)}` : "Back soon";
+      $("next-time").textContent = g ? fmt.time(g.start) : "";
+      $("next-place").textContent = g && g.location ? ` · ${g.location}` : "";
+      $("next-countdown").textContent = br.reason || "See you soon!";
+      return;
+    }
+    $("next-label").textContent = "Next gathering";
+    if (!g) return;
     $("next-day").textContent = sameDay(g.start, now) ? "Tonight" : fmt.day(g.start);
     $("next-time").textContent = fmt.time(g.start);
     $("next-place").textContent = g.location ? ` · ${g.location}` : "";
@@ -99,7 +111,7 @@
       if (sameDay(day, today)) cls.push("today");
       if (selected && sameDay(day, selected)) cls.push("selected");
       if (day < new Date(today.getFullYear(), today.getMonth(), today.getDate())) cls.push("past");
-      const dots = items.map((it) => `<i class="dot ${it.weekly ? "dot-weekly" : "dot-event"}"></i>`).join("");
+      const dots = items.map((it) => `<i class="dot ${it.cancelled ? "dot-cancelled" : it.weekly ? "dot-weekly" : "dot-event"}"></i>`).join("");
       const label = `${fmt.day(day)}${items.length ? `, ${items.length} item${items.length > 1 ? "s" : ""}` : ""}`;
       html += `<button type="button" class="${cls.join(" ")}" data-day="${dayKey(day)}" aria-label="${esc(label)}">
                  <span class="num">${d}</span><span class="dots">${dots}</span>
@@ -111,15 +123,15 @@
   function eventCard(it) {
     const time = fmt.time(it.start) + (it.end ? `–${fmt.time(it.end)}` : "");
     return `
-      <article class="event ${it.weekly ? "weekly" : "special"}">
+      <article class="event ${it.weekly ? "weekly" : "special"}${it.cancelled ? " cancelled" : ""}">
         <div class="event-date">
           <span class="m">${it.start.toLocaleDateString("en-GB", { month: "short" })}</span>
           <span class="d">${it.start.getDate()}</span>
         </div>
         <div class="event-body">
-          <h4>${esc(it.title)}</h4>
+          <h4>${it.cancelled ? `<span class="badge-cancel">Cancelled</span> ` : ""}<span class="t">${esc(it.title)}</span></h4>
           <p class="event-meta">${fmt.day(it.start)} · ${time}${it.location ? ` · ${esc(it.location)}` : ""}</p>
-          ${it.description ? `<p>${richText(it.description)}</p>` : ""}
+          ${it.description ? `<p>${it.cancelled ? esc(it.description) : richText(it.description)}</p>` : ""}
         </div>
       </article>`;
   }
@@ -143,7 +155,18 @@
     const g = nextGathering(now);
     if (g) upcoming.push(g);
     upcoming.sort((a, b) => a.start - b.start);
-    box.innerHTML = upcoming.map(eventCard).join("") || `<p class="muted">Nothing planned yet.</p>`;
+    const br = upcomingBreak(now);
+    const breakNote = br ? `
+      <article class="event break-note">
+        <div class="event-body">
+          <h4>${br.starts_on === br.ends_on ? "No gathering this Thursday" : "Taking a break"}</h4>
+          <p class="event-meta">${br.starts_on === br.ends_on
+            ? fmt.day(new Date(br.starts_on + "T00:00"))
+            : `${fmt.short(new Date(br.starts_on + "T00:00"))} – ${fmt.short(new Date(br.ends_on + "T00:00"))}`}</p>
+          ${br.reason ? `<p>${esc(br.reason)}</p>` : ""}
+        </div>
+      </article>` : "";
+    box.innerHTML = breakNote + (upcoming.map(eventCard).join("") || `<p class="muted">Nothing planned yet.</p>`);
   }
 
   $("cal-days").addEventListener("click", (e) => {
@@ -159,7 +182,7 @@
 
   renderCalendar();
   renderSide();
-  loadEvents().then(() => { renderCalendar(); renderSide(); });
+  Promise.all([loadEvents(), loadBreaks()]).then(() => { renderCalendar(); renderSide(); renderNext(); });
 
   /* ---------- Request form ---------- */
   const form = $("request-form");
