@@ -37,6 +37,17 @@
 .tag.question { background: #dbe7ff; color: #1e40af; }
 .tag.pin { background: var(--ink); color: var(--yellow); }
 .tag.expired { background: #eee; color: #666; }
+.panel > .card + .card, .panel > .card + form { margin-top: 18px; }
+.thursday-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.thu { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 12px; }
+.thu .d { font-weight: 600; }
+.thu .s { display: block; font-size: .8rem; color: var(--muted); font-weight: 400; }
+.thu.off { background: #fdf1ef; border-color: #f1c3be; }
+.thu.off .dd { text-decoration: line-through; color: var(--muted); }
+.thu.off .s { color: var(--err); }
+.thu .btn.small { align-self: center; }
+.list-sub { font-size: 1rem; font-weight: 700; margin: 8px 0 0; }
+#break-list { margin-top: 4px; }
 .notice-box { padding: 20px; max-width: 520px; margin: 40px auto; }
 
 @media (max-width: 560px) {

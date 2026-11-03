@@ -1,6 +1,6 @@
 // Admin page: login, requests inbox, notices and events.
 (function () {
-  const { db, esc, fmt, dayKey } = window.LC;
+  const { db, esc, fmt, dayKey, cfg, gatheringOn, loadBreaks } = window.LC;
   const $ = (id) => document.getElementById(id);
   const show = (el, on) => { el.hidden = !on; };
 
@@ -29,7 +29,7 @@
     show($("not-admin"), !isAdmin);
     if (isAdmin) {
       $("who").textContent = `Logged in as ${session.user.email}`;
-      loadRequests(); loadNotices(); loadEvents();
+      loadRequests(); loadNotices(); loadEvents(); refreshBreaks();
     }
   }
 
@@ -268,6 +268,108 @@
       await db.from("events").delete().eq("id", b.dataset.id);
       loadEvents();
     }
+  });
+
+  /* ---------- Thursday gatherings & breaks ---------- */
+  let breaks = [];
+  const keyDate = (k) => new Date(k + "T00:00");
+  const shiftKey = (k, days) => { const d = keyDate(k); d.setDate(d.getDate() + days); return dayKey(d); };
+  const coveringBreak = (k) => breaks.find((b) => b.starts_on <= k && k <= b.ends_on);
+  const rangeText = (b) => b.starts_on === b.ends_on
+    ? fmt.day(keyDate(b.starts_on))
+    : `${fmt.short(keyDate(b.starts_on))} – ${fmt.short(keyDate(b.ends_on))}`;
+
+  async function refreshBreaks() {
+    breaks = (await loadBreaks()) || [];
+    renderThursdays();
+    renderBreakList();
+  }
+
+  function renderThursdays() {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    let html = "";
+    for (let i = 0, found = 0; found < 12 && i < 120; i++) {
+      const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i);
+      if (!gatheringOn(d)) continue;
+      found++;
+      const k = dayKey(d);
+      const br = coveringBreak(k);
+      html += `
+        <div class="thu ${br ? "off" : ""}">
+          <span class="d"><span class="dd">${fmt.day(d)}</span>
+            <span class="s">${br ? "Cancelled" + (br.reason ? " – " + esc(br.reason) : "") : cfg.gathering.time}</span></span>
+          ${br
+            ? `<button class="btn small secondary" data-act="restore" data-key="${k}">Restore</button>`
+            : `<button class="btn small danger" data-act="cancel" data-key="${k}">Cancel</button>`}
+        </div>`;
+    }
+    $("thursday-list").innerHTML = html;
+  }
+
+  function renderBreakList() {
+    const today = dayKey(new Date());
+    const list = breaks.filter((b) => b.ends_on >= today && b.starts_on !== b.ends_on);
+    $("break-list").innerHTML = list.length ? `<h3 class="list-sub">Planned breaks</h3>` + list.map((b) => `
+      <article class="item">
+        <div class="item-head">
+          <div>
+            <h3>${rangeText(b)}</h3>
+            ${b.reason ? `<p class="meta">${esc(b.reason)}</p>` : ""}
+          </div>
+          <div class="actions">
+            <button type="button" class="btn small danger" data-act="remove-break" data-id="${b.id}">Remove break</button>
+          </div>
+        </div>
+      </article>`).join("") : "";
+  }
+
+  $("thursday-list").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-act]");
+    if (!b) return;
+    const k = b.dataset.key;
+    b.disabled = true;
+    if (b.dataset.act === "cancel") {
+      const reason = prompt(`Cancel ${fmt.day(keyDate(k))}?\nReason (optional – shown on the website):`, "");
+      if (reason === null) { b.disabled = false; return; }
+      const { error } = await db.from("breaks").insert({ starts_on: k, ends_on: k, reason: reason.trim().slice(0, 200) });
+      if (error) alert("Couldn't cancel: " + error.message);
+    } else {
+      const br = coveringBreak(k);
+      if (br) {
+        // Remove this Thursday from the break, keeping any days before/after it.
+        const pieces = [];
+        if (br.starts_on < k) pieces.push({ starts_on: br.starts_on, ends_on: shiftKey(k, -1), reason: br.reason });
+        if (k < br.ends_on) pieces.push({ starts_on: shiftKey(k, 1), ends_on: br.ends_on, reason: br.reason });
+        const { error } = await db.from("breaks").delete().eq("id", br.id);
+        if (!error && pieces.length) await db.from("breaks").insert(pieces);
+        if (error) alert("Couldn't restore: " + error.message);
+      }
+    }
+    refreshBreaks();
+  });
+
+  $("break-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const row = {
+      starts_on: fd.get("starts_on"),
+      ends_on: fd.get("ends_on") || fd.get("starts_on"),
+      reason: String(fd.get("reason") || "").trim()
+    };
+    if (!row.starts_on) return setStatus($("break-status"), "Please choose a start date.", false);
+    if (row.ends_on < row.starts_on) return setStatus($("break-status"), "'Until' must be on or after 'From'.", false);
+    const { error } = await db.from("breaks").insert(row);
+    if (error) return setStatus($("break-status"), "Couldn't save: " + error.message, false);
+    setStatus($("break-status"), "Break saved ✓", true);
+    e.target.reset();
+    refreshBreaks();
+  });
+
+  $("break-list").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-act=remove-break]");
+    if (!b || !confirm("Remove this break? Those Thursdays will be back on.")) return;
+    await db.from("breaks").delete().eq("id", b.dataset.id);
+    refreshBreaks();
   });
 
   route();

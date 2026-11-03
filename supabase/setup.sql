@@ -125,6 +125,34 @@ $$;
 drop trigger if exists requests_rate_limit on public.requests;
 create trigger requests_rate_limit before insert on public.requests
   for each row execute function public.requests_rate_limit();
+revoke execute on function public.requests_rate_limit() from public, anon, authenticated;
+
+-- ---------- Breaks / cancelled Thursdays -------------------------------
+-- Any weekly gathering between starts_on and ends_on (inclusive) is cancelled.
+-- A single cancelled Thursday = same start and end date.
+create table if not exists public.breaks (
+  id         uuid primary key default gen_random_uuid(),
+  starts_on  date not null,
+  ends_on    date not null,
+  reason     text not null default '' check (length(reason) <= 200),
+  created_at timestamptz not null default now(),
+  check (ends_on >= starts_on)
+);
+alter table public.breaks enable row level security;
+revoke all on public.breaks from anon, authenticated;
+grant select on public.breaks to anon, authenticated;
+grant insert, update, delete on public.breaks to authenticated;
+drop policy if exists breaks_public_read on public.breaks;
+create policy breaks_public_read on public.breaks for select to anon, authenticated using (true);
+drop policy if exists breaks_admin_insert on public.breaks;
+create policy breaks_admin_insert on public.breaks for insert to authenticated
+  with check (public.is_admin());
+drop policy if exists breaks_admin_update on public.breaks;
+create policy breaks_admin_update on public.breaks for update to authenticated
+  using (public.is_admin()) with check (public.is_admin());
+drop policy if exists breaks_admin_delete on public.breaks;
+create policy breaks_admin_delete on public.breaks for delete to authenticated
+  using (public.is_admin());
 
 -- =====================================================================
 -- MAKE YOURSELF ADMIN (after creating your user under Authentication → Users):

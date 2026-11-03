@@ -127,6 +127,14 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
 .dot-weekly { background: var(--ink); }
 .dot-event { background: var(--blue); }
+.dot-cancelled { background: transparent; border: 1.5px solid #b0b0b0; width: 7px; height: 7px; box-sizing: border-box; }
+.event.cancelled { opacity: .75; border-left-color: #bbb; }
+.event.cancelled .event-date { background: #9a9a9a; }
+.event.cancelled h4 .t { text-decoration: line-through; color: var(--muted); }
+.badge-cancel { display: inline-block; background: #fde8e6; color: var(--err); font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: 2px 8px; border-radius: 999px; vertical-align: middle; }
+.event.break-note { background: var(--yellow-soft); border: 2px dashed var(--ink); }
+.next-card.on-break { background: #fff; }
+.next-card.on-break .next-day { font-size: 1.5rem; }
 .cal-legend { display: flex; gap: 18px; margin-top: 12px; font-size: .85rem; color: var(--muted); flex-wrap: wrap; }
 .cal-legend .dot { margin-right: 6px; }
 .cal-side h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 12px; }
