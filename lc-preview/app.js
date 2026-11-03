@@ -142,7 +142,12 @@ function wireAuth(){
      options:{data:{full_name:String(f.get("name"))},emailRedirectTo:location.origin+location.pathname}
    });
    e.currentTarget.querySelector('input[name="password"]').value="";
-   status("signup-status",error?error.message:"Check your email for a verification link.");
+   status("signup-status",error?
+      (error.code==="email_address_not_authorized"?
+        "Email confirmations for public members are awaiting the ministry email provider setup. Please contact a leader." :
+       error.code==="over_email_send_rate_limit"?
+        "Too many verification emails have been sent. Please try later." : error.message)
+      :"Check your email for a verification link, then sign in.");
  });
  $("logout-btn").addEventListener("click",async()=>{await db.auth.signOut();await showSession();});
  $("event-form").addEventListener("submit",async e=>{
