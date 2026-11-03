@@ -13,33 +13,53 @@ header{border-bottom:1px solid var(--line);position:sticky;top:0;background:#111
 .hero{padding:110px 0 105px;position:relative;overflow:hidden}.hero:after{content:"";position:absolute;right:-160px;top:0;width:450px;height:450px;border:1px solid #534b2d;border-radius:50%;box-shadow:0 0 0 60px #f8d24106,0 0 0 145px #f8d24106;pointer-events:none}.eyebrow{text-transform:uppercase;font-weight:800;font-size:.8rem;letter-spacing:.20em;color:var(--yellow)}h1{font-size:clamp(3.6rem,8vw,7rem);line-height:1.01;letter-spacing:-.065em;max-width:840px;margin:22px 0}h2{font-size:clamp(1.75rem,3.5vw,2.55rem);letter-spacing:-.035em;margin:10px 0 24px}h3{font-size:1.3rem;margin:10px 0}.lead{color:var(--muted);font-size:1.16rem;line-height:1.7;max-width:600px}.cta{display:inline-block;border-radius:9px;background:var(--yellow);color:#1b1a14;padding:15px 24px;font-weight:850;margin:24px 10px 0 0}.cta:hover{color:#1b1a14;background:#ffe77f}.outline{display:inline-block;border:1px solid #888;border-radius:9px;padding:14px 23px;font-weight:700;margin:24px 0 0}
 .section{padding:74px 0;border-top:1px solid #2b2c2f}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}.card{padding:30px;border:1px solid var(--line);background:var(--panel);border-radius:16px}.tag{font-size:.8rem;color:var(--yellow);font-weight:850;letter-spacing:.08em}.card p,.muted{color:var(--muted);line-height:1.65}.calendar-controls{display:flex;align-items:center;gap:18px;margin:25px 0 16px}.calendar-controls button{background:#28292c;color:var(--white);border:1px solid #4d4e51;border-radius:8px;padding:9px 14px;min-width:43px}.calendar-controls strong{min-width:190px;text-align:center}.calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}.day{background:#252629;border-radius:8px;min-height:90px;padding:10px;font-size:.92rem}.day.heading{min-height:38px;background:transparent;text-align:center;color:var(--muted);font-weight:750}.day.study{background:#3d371e;outline:1px solid #9f8831}.small{display:block;margin-top:7px;color:var(--yellow);font-size:.72rem;line-height:1.3}.message{background:#27251b;border:1px solid #77662f;padding:22px 24px;border-radius:12px;color:#ede4be;line-height:1.7}.section-title{max-width:680px;margin-bottom:28px}footer{padding:38px 24px;text-align:center;color:var(--muted);border-top:1px solid var(--line);font-size:.9rem}
 @media(max-width:760px){.nav{align-items:flex-start;flex-direction:column}nav{gap:14px}.hero{padding:70px 0 75px}.hero:after{opacity:.25}.grid{grid-template-columns:1fr}.section{padding:55px 0}.day{min-height:68px;padding:5px;font-size:.78rem}.small{font-size:.58rem;margin-top:5px}.card{padding:23px}}@media(max-width:390px){.day{min-height:62px}.small{font-size:.52rem}.calendar{gap:3px}}
+
+.form-card{display:flex;flex-direction:column;gap:17px;max-width:100%;margin-top:14px}
+.form-card label{font-size:.92rem;font-weight:650;display:flex;flex-direction:column;gap:8px}
+.form-card input,.form-card textarea,.form-card select{width:100%;font:inherit;color:var(--white);background:#141518;border:1px solid #5a5b60;border-radius:9px;padding:13px;outline-offset:2px}
+.form-card input:focus,.form-card textarea:focus,.form-card select:focus{outline:2px solid var(--yellow)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.form-card .check{flex-direction:row;align-items:flex-start;line-height:1.45;font-weight:400}.form-card .check input{width:18px;height:18px;flex:none;margin:2px 5px 0 0}.submit-btn{border:0;align-self:start;margin:3px 0}.submit-btn:disabled{opacity:.4;cursor:not-allowed}.honeypot{position:absolute;left:-10000px;max-width:1px;overflow:hidden}
+.admin-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-top:1px solid var(--line)}.admin-row button{border:1px solid #7b7474;background:transparent;color:#f6d3d3;border-radius:6px;padding:8px}.admin-row small{color:var(--muted)}.request-card{border-top:1px solid var(--line);padding:17px 0}.request-card pre{white-space:pre-wrap;overflow-wrap:anywhere;color:var(--muted);font:inherit}.item-summary{display:block;line-height:1.5}
+[hidden]{display:none!important}@media(max-width:760px){.form-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <a href="#main" class="skip">Skip to content</a>
-<header><div class="nav"><a class="brand" href="#home" aria-label="Living Culture home">LIVING <span>CULTURE.</span></a><nav aria-label="Main navigation"><a href="#home">Home</a><a href="#events">Events</a><a href="#calendar">Calendar</a><a href="#notices">Notice board</a><a href="#members">Members</a></nav></div></header>
+<header><div class="nav"><a class="brand" href="#home" aria-label="Living Culture home">LIVING <span>CULTURE.</span></a><nav aria-label="Main navigation"><a href="#home">Home</a><a href="#events">Events</a><a href="#calendar">Calendar</a><a href="#notices">Notice board</a><a href="#requests">Prayer & questions</a><a href="#members">Members</a></nav></div></header>
 <main id="main">
 <section class="hero wrap" id="home"><div class="eyebrow">Young adults · Faith · Community</div><h1>Faith lived<br><span class="yellow">together.</span></h1><p class="lead">You're invited. Build friendships, grow in God's Word, and find your community at Living Culture.</p><a class="cta" href="#events">Explore events</a><a class="outline" href="#notices">Latest notices</a></section>
 <section class="section" id="events"><div class="wrap"><div class="section-title"><div class="eyebrow">Gather and grow</div><h2>There's a place for you.</h2><p class="muted">Whether you're new or you've been coming for years, you're welcome here.</p></div><div class="grid"><article class="card"><div class="tag">EVERY THURSDAY · 19:00</div><h3>Young Adults Bible Study</h3><p>Open Scripture together, ask real questions, grow in faith and get to know one another.</p></article><article class="card"><div class="tag">WATCH THIS SPACE</div><h3>Special events</h3><p>Worship nights, community gatherings and other big events will be announced here.</p></article></div></div></section>
 <section class="section" id="calendar"><div class="wrap"><div class="eyebrow">Stay connected</div><h2>Community calendar</h2><p class="muted">Thursdays are highlighted for the regular 19:00 Bible study. Confirm venue and any schedule changes with the ministry leaders.</p><div class="calendar-controls"><button id="prev" aria-label="Previous month">←</button><strong id="month" aria-live="polite"></strong><button id="next" aria-label="Next month">→</button></div><div class="calendar" id="dates" aria-label="Monthly event calendar"></div></div></section>
 <section class="section" id="notices"><div class="wrap"><div class="eyebrow">The latest</div><h2>Notice board</h2><article class="card"><div class="tag">WELCOME</div><h3>Welcome to Living Culture!</h3><p>We're building a home for our young adults community online. Stay tuned for announcements, important updates and big events.</p></article></div></section>
-<section class="section" id="members"><div class="wrap"><div class="eyebrow">Member community</div><h2>Member portal is coming next</h2><p class="lead">Soon you'll be able to create an account, manage your profile and choose which email notifications you'd like to receive.</p><div class="message">This is a public preview. Registration, login, email notifications and the admin dashboard are not enabled yet. Please don't submit personal or sensitive information on this preview.</div></div></section>
+<section class="section" id="requests"><div class="wrap"><div class="section-title"><div class="eyebrow">We are here for you</div><h2>Prayer requests & faith questions</h2><p class="muted">Need prayer, or have a deep question about faith and life? Share it privately with our ministry leaders. We won't display your message publicly.</p></div>
+<form id="inquiry-form" class="card form-card">
+<div class="form-grid"><label>I'm reaching out for<select name="kind" required><option value="prayer">A prayer request</option><option value="question">A faith or life question</option></select></label><label>Your name<input name="full_name" maxlength="100" required autocomplete="name" placeholder="Your name"></label></div>
+<label>Your email<input type="email" name="email" maxlength="254" required autocomplete="email" placeholder="you@example.com"></label>
+<label>Your message<textarea name="message" maxlength="5000" minlength="10" rows="5" required placeholder="What's on your heart?"></textarea></label>
+<label class="check"><input type="checkbox" name="keep_private" checked> Keep this request private to ministry leadership</label>
+<label class="check"><input type="checkbox" name="consent" required> I consent to Living Culture storing this request and contacting me about it</label>
+<div class="honeypot" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div>
+<div id="captcha-area"></div>
+<button class="cta submit-btn" type="submit" id="inquiry-submit" disabled>Send my request</button><p id="inquiry-status" class="muted" role="status">Secure request submission is being configured.</p>
+</form></div></section>
+<section class="section" id="members"><div class="wrap"><div class="eyebrow">Welcome to the family</div><h2>Living Culture members</h2><p class="lead">Create a member account, receive ministry updates and keep in touch with the Living Culture community.</p>
+<div id="auth-unconfigured" class="message">Member registration and admin sign-in are being connected to a secure backend. They are not active yet.</div>
+<div id="auth-forms" class="grid" hidden>
+<form id="login-form" class="card form-card"><h3>Member / admin sign in</h3><label>Email<input required type="email" name="email" autocomplete="email"></label><label>Password<input required type="password" name="password" autocomplete="current-password"></label><button class="cta submit-btn">Sign in</button><p role="status" id="login-status" class="muted"></p></form>
+<form id="signup-form" class="card form-card"><h3>Create an account</h3><label>Your name<input required name="name" maxlength="100" autocomplete="name"></label><label>Email<input required type="email" name="email" autocomplete="email"></label><label>Create a password<input required type="password" name="password" minlength="12" autocomplete="new-password"></label><button class="cta submit-btn">Register</button><p role="status" id="signup-status" class="muted"></p></form>
+</div>
+<div id="signed-in" class="card" hidden><h3>Welcome back!</h3><p id="signed-in-email" class="muted"></p><p id="member-role" class="tag"></p><button class="outline" id="logout-btn" type="button">Sign out</button></div>
+<div id="admin-panel" hidden><div class="eyebrow">Leadership tools</div><h2>Admin dashboard</h2><p class="muted">Only accounts promoted to admin in the database can make changes. Times are South Africa Standard Time (UTC+2).</p>
+<div class="grid">
+<form id="event-form" class="card form-card"><h3>Add calendar event</h3><label>Event title<input name="title" required maxlength="140" placeholder="Young Adults Worship Night"></label><label>Date & time (SAST)<input type="datetime-local" name="starts" required></label><label>Venue<input name="venue" maxlength="180" placeholder="Church hall"></label><label>Details<textarea name="details" rows="3" maxlength="3000"></textarea></label><button class="cta submit-btn" type="submit">Publish event</button><p id="event-status" role="status" class="muted"></p></form>
+<form id="notice-form" class="card form-card"><h3>Post notice</h3><label>Heading<input name="title" maxlength="140" required></label><label>Announcement<textarea name="body" minlength="1" maxlength="6000" rows="5" required></textarea></label><label>Optional expiry date<input type="date" name="expiry"></label><button class="cta submit-btn" type="submit">Publish notice</button><p id="notice-status" role="status" class="muted"></p></form>
+</div>
+<div class="grid" style="margin-top:22px"><div class="card"><h3>Manage events</h3><div id="manage-events" class="muted"></div></div><div class="card"><h3>Manage notices</h3><div id="manage-notices" class="muted"></div></div></div>
+<div class="card" style="margin-top:22px"><h3>Private requests inbox</h3><p class="muted">Sensitive requests are visible only to administrators. Handle prayer requests and questions confidentially.</p><div id="admin-inquiries"></div></div>
+</div></div></section>
 </main>
 <footer>© <span id="year"></span> Living Culture · Faith. Community. Purpose.</footer>
-<script>
-document.getElementById("year").textContent=new Date().getFullYear();
-var today=new Date(),year=today.getFullYear(),month=today.getMonth();
-function drawCalendar(){
- var first=new Date(year,month,1),days=new Date(year,month+1,0).getDate();
- document.getElementById("month").textContent=first.toLocaleDateString("en-ZA",{month:"long",year:"numeric"});
- var names=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],html=names.map(function(n){return '<div class="day heading">'+n+'</div>';});
- for(var i=0;i<first.getDay();i++)html.push('<div class="day" aria-hidden="true"></div>');
- for(var d=1;d<=days;d++){var isThu=new Date(year,month,d).getDay()===4;html.push('<div class="day'+(isThu?' study':'')+'">'+d+(isThu?'<span class="small">Bible study<br>19:00</span>':'')+'</div>');}
- document.getElementById("dates").innerHTML=html.join("");
-}
-document.getElementById("prev").addEventListener("click",function(){month--;if(month<0){month=11;year--;}drawCalendar();});
-document.getElementById("next").addEventListener("click",function(){month++;if(month>11){month=0;year++;}drawCalendar();});
-drawCalendar();
-</script>
+<script src="./config.js"></script>
+<script type="module" src="./app.js"></script>
 </body>
 </html>
