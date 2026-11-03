@@ -6,6 +6,7 @@ A simple static website (GitHub Pages) with a free Supabase database behind it.
 - **Calendar** – the weekly gathering (every Thursday 19:00) shows automatically; admins add special events
 - **Prayer & questions** – anyone can send a prayer request or a question about faith & life; only admins can read them
 - **Breaks & cancellations** – admins can put the group *on break* for a date range (those Thursdays disappear from the calendar and the site says “We're on a break – back on …”), or *cancel* a single Thursday (it stays on the calendar marked “Cancelled”)
+- **Bible** (`bible.html`) – read any chapter in the Bible versions available to your YouVersion app key, plus a Verse of the Day
 - **Leader login** (`admin.html`) – only admins can log in and manage everything
 
 ## Files
@@ -40,6 +41,12 @@ A simple static website (GitHub Pages) with a free Supabase database behind it.
 To use a different Supabase project, change `supabaseUrl` and `supabaseKey` in `js/config.js`
 (use the *publishable/anon* key – **never** the secret/service_role key).
 
+## Bible (YouVersion)
+1. Sign up (free) at https://platform.youversion.com and create an app.
+2. Copy the **app key** into `js/config.js` → `youversion.appKey`. (YouVersion app keys are *not* secrets – they're meant to be used in websites.)
+3. Optional: in the YouVersion portal, accept the licences of extra versions (e.g. NIV) so they show in the version list.
+   The Berean Standard Bible (id 3034, public domain) is the default.
+
 ## Cost: R0 / $0
 Everything runs on free plans:
 - **GitHub Pages** – free hosting (the repo must stay **public** on a free GitHub account).
@@ -48,6 +55,7 @@ Everything runs on free plans:
   projects pause after ~1 week with no activity. If it ever does pause, click *Restore* in the
   Supabase dashboard (also free).
 - Fonts and the Supabase library load from free public CDNs.
+- **YouVersion Platform** – free developer account for the Bible API.
 - No paid email service is needed.
 
 The only optional cost would be your own domain name (e.g. livingculture.co.za); the free

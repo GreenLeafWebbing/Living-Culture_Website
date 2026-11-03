@@ -1,0 +1,28 @@
+/* Bible page */
+.nav a[aria-current="page"] { background: var(--yellow); color: var(--ink); }
+.bible-msg { padding: 18px 20px; }
+.votd {
+  background: var(--ink); color: #fff; border-radius: 20px; padding: 26px 28px; margin-bottom: 22px;
+}
+.votd-label { margin: 0; text-transform: uppercase; letter-spacing: .14em; font-size: .78rem; font-weight: 700; color: var(--yellow); }
+.votd blockquote { margin: 10px 0; font-size: 1.25rem; line-height: 1.55; }
+.votd-ref { margin: 0; color: #ccc; font-weight: 600; }
+.votd .link-btn { color: var(--yellow); margin-left: 8px; }
+
+.reader-bar { display: grid; grid-template-columns: 1.3fr 1.3fr .7fr; gap: 12px; padding: 16px; margin-bottom: 18px; }
+.reader { padding: 26px 30px; }
+.reader-ref { font-size: 1.5rem; font-weight: 800; margin-bottom: 14px; }
+#reader-text { font-size: 1.12rem; line-height: 1.8; }
+.reader-copy { margin: 22px 0 0; padding-top: 12px; border-top: 1px solid var(--line); font-size: .8rem; color: var(--muted); }
+.reader-nav { display: flex; justify-content: space-between; gap: 10px; margin-top: 18px; }
+.reader-nav .btn { align-self: auto; }
+.reader-nav .btn:disabled { opacity: .35; cursor: default; }
+.powered { text-align: center; font-size: .85rem; color: var(--muted); margin-top: 22px; }
+
+@media (max-width: 560px) {
+  .reader-bar { grid-template-columns: 1fr 1fr; }
+  .reader-bar label:first-child { grid-column: 1 / -1; }
+  .reader { padding: 20px 18px; }
+  .votd { padding: 22px 20px; }
+  .votd blockquote { font-size: 1.12rem; }
+}
