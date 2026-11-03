@@ -84,10 +84,28 @@ Deno.serve(async (req: Request) => {
 
     // Notify by email only if a FREE provider is configured in Edge Function secrets.
     // Never include confidential message contents in notification emails.
+    const brevoKey = Deno.env.get("BREVO_API_KEY");
+    const brevoFrom = Deno.env.get("BREVO_FROM_EMAIL");
     const mailKey = Deno.env.get("RESEND_API_KEY");
     const mailFrom = Deno.env.get("RESEND_FROM_EMAIL");
     const mailTo = Deno.env.get("ADMIN_NOTIFY_EMAIL");
-    if (mailKey && mailFrom && mailTo) {
+    if (brevoKey && brevoFrom && mailTo) {
+      try {
+        const mail = await fetch("https://api.brevo.com/v3/smtp/email", {
+          method:"POST",
+          headers:{"api-key":brevoKey,"Content-Type":"application/json","accept":"application/json"},
+          body:JSON.stringify({
+            sender:{email:brevoFrom,name:"Living Culture"},
+            to:[{email:mailTo}],
+            subject:kind === "prayer" ? "Living Culture: New prayer request" : "Living Culture: New faith or life question",
+            textContent:"A confidential message has arrived. Sign in to the Living Culture admin dashboard to review it."
+          })
+        });
+        if (!mail.ok) console.warn("Brevo notification delivery failed:",mail.status);
+      } catch (_) {
+        console.warn("Brevo notification provider unavailable.");
+      }
+    } else if (mailKey && mailFrom && mailTo) {
       try {
         const mail = await fetch("https://api.resend.com/emails", {
           method: "POST",
