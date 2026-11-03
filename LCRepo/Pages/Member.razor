@@ -5,11 +5,11 @@
 <section class="page-heading"><div class="container"><p class="eyebrow">You belong here</p><h1>Member portal.</h1><p class="lead">Sign in to your Living Culture community account or register to join.</p></div></section>
 <section class="section"><div class="container">
     @if (Loading){<div class="message">Loading your session…</div>}
-    else if (Member.SignedIn) {
-        <div class="content-card member-panel"><p class="eyebrow">Welcome back</p><h2>@Member.Email</h2>
-        <p>Signed in as <strong>@(Member.IsAdmin ? "administrator" : "community member")</strong>.</p>
+    else if (Session.SignedIn) {
+        <div class="content-card member-panel"><p class="eyebrow">Welcome back</p><h2>@Session.Email</h2>
+        <p>Signed in as <strong>@(Session.IsAdmin ? "administrator" : "community member")</strong>.</p>
         <div class="btn-row">
-            @if(Member.IsAdmin){<a class="btn btn-primary" href="admin">Open admin dashboard →</a>}
+            @if(Session.IsAdmin){<a class="btn btn-primary" href="admin">Open admin dashboard →</a>}
             <button class="btn btn-outline" @onclick="SignOutAsync" disabled="@Busy">Sign out</button>
         </div></div>
     } else {
@@ -35,7 +35,7 @@
     <p class="notice-help">Email verification may require additional ministry email-provider setup before public signups can be completed.</p>
 </div></section>
 @code {
-    private MemberState Member = new();
+    private MemberState Session = new();
     private string LoginEmail = "";
     private string LoginPassword = "";
     private string RegisterName = "";
@@ -47,14 +47,14 @@
     private bool Loading = true;
     protected override async Task OnInitializedAsync()
     {
-        try { Member = await Community.WhoAmIAsync(); }
+        try { Session = await Community.WhoAmIAsync(); }
         catch (Exception ex) { IsError = true; Message = "Could not load login: " + ex.Message; }
         finally { Loading = false; }
     }
     private async Task SignInAsync()
     {
         Busy = true; IsError = false; Message = "";
-        try { Message = await Community.SignInAsync(LoginEmail.Trim(), LoginPassword); LoginPassword = ""; Member = await Community.WhoAmIAsync(); }
+        try { Message = await Community.SignInAsync(LoginEmail.Trim(), LoginPassword); LoginPassword = ""; Session = await Community.WhoAmIAsync(); }
         catch (Exception ex) { IsError = true; Message = ex.Message; LoginPassword = ""; }
         finally { Busy = false; }
     }
@@ -68,7 +68,7 @@
     private async Task SignOutAsync()
     {
         Busy = true; Message = "";
-        try { await Community.SignOutAsync(); Member = new MemberState(); Message = "You've been signed out."; }
+        try { await Community.SignOutAsync(); Session = new MemberState(); Message = "You've been signed out."; }
         catch (Exception ex) { IsError = true; Message = ex.Message; }
         finally { Busy = false; }
     }
