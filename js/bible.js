@@ -70,12 +70,12 @@
     const lang = encodeURIComponent(cfg.language || "en");
     const q = `/bibles?language_ranges[]=${lang}&fields[]=id&fields[]=abbreviation&fields[]=localized_title&page_size=*`;
     let all = [];
-    try { all = (await yv(q)).data || []; } catch { /* fall back to default only */ }
+    try { all = await listAll(q); } catch { /* fall back to default only */ }
 
     // Only offer the versions we chose (in that order) that are licensed for our key.
     const wanted = (cfg.versions || []).map((a) => a.toUpperCase());
     let list = wanted
-      .map((abbr) => all.find((b) => (b.abbreviation || "").toUpperCase() === abbr))
+      .map((abbr) => all.find((b) => abbrOf(b).includes(abbr)))
       .filter(Boolean);
     if (!list.length) {
       const fallback = all.find((b) => b.id === cfg.defaultBibleId);
@@ -87,6 +87,46 @@
       .map((b) => `<option value="${b.id}">${escapeHtml(b.abbreviation || "")}${b.localized_title ? " – " + escapeHtml(b.localized_title) : ""}</option>`)
       .join("");
     $("sel-version").value = String(bibleId);
+  }
+
+  // All pages of a paginated list.
+  async function listAll(q) {
+    let out = [], token = "";
+    for (let i = 0; i < 20; i++) {
+      const res = await yv(q + (token ? `&page_token=${encodeURIComponent(token)}` : ""));
+      out = out.concat(res.data || []);
+      token = res.next_page_token;
+      if (!token) break;
+    }
+    return out;
+  }
+
+  const abbrOf = (b) => [b.abbreviation, b.localized_abbreviation].filter(Boolean).map((a) => a.toUpperCase());
+
+  // bible.html#check – shows which versions this app key can use (for leaders).
+  async function runCheck() {
+    const el = $("bible-setup");
+    el.hidden = false;
+    el.innerHTML = "<strong>Checking YouVersion…</strong>";
+    const lang = encodeURIComponent(cfg.language || "en");
+    try {
+      const [mine, every] = await Promise.all([
+        listAll(`/bibles?language_ranges[]=${lang}&fields[]=id&fields[]=abbreviation&fields[]=localized_title&page_size=*`),
+        listAll(`/bibles?language_ranges[]=${lang}&all_available=true&fields[]=id&fields[]=abbreviation&fields[]=localized_title&page_size=*`)
+      ]);
+      const row = (abbr) => {
+        const have = mine.find((b) => abbrOf(b).includes(abbr));
+        const exists = every.find((b) => abbrOf(b).includes(abbr));
+        const state = have ? "✅ Licensed – shows on the site"
+          : exists ? "🔒 Available on YouVersion, but NOT licensed for your app yet"
+          : "❌ Not offered through the YouVersion Platform API";
+        return `<li><strong>${escapeHtml(abbr)}</strong> – ${state}${(have || exists) ? ` <span class="muted">(id ${(have || exists).id})</span>` : ""}</li>`;
+      };
+      el.innerHTML = `<strong>Your versions</strong><ul class="check-list">${(cfg.versions || []).map((a) => row(a.toUpperCase())).join("")}</ul>
+        <p class="muted">Your key can currently use ${mine.length} English version(s): ${mine.map((b) => escapeHtml(b.abbreviation || b.id)).join(", ") || "none"}.</p>`;
+    } catch (e) {
+      el.textContent = "Couldn't reach YouVersion: " + e.message;
+    }
   }
 
   function escapeHtml(s) {
@@ -201,6 +241,7 @@
 
   /* ---------- start ---------- */
   (async () => {
+    if (location.hash.includes("check")) runCheck();
     try {
       await loadVersions();
       await loadBooks();
