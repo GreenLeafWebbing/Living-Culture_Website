@@ -45,6 +45,9 @@
 .thu.off { background: #fdf1ef; border-color: #f1c3be; }
 .thu.off .dd { text-decoration: line-through; color: var(--muted); }
 .thu.off .s { color: var(--err); }
+.thu.brk { background: var(--yellow-soft); border-color: #e9d66b; border-style: dashed; }
+.thu.brk .dd { color: var(--muted); }
+.thu.brk .s { color: var(--ink-2); }
 .thu .btn.small { align-self: center; }
 .list-sub { font-size: 1rem; font-weight: 700; margin: 8px 0 0; }
 #break-list { margin-top: 4px; }

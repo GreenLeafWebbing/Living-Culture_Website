@@ -13,8 +13,10 @@
     const card = document.querySelector(".next-card");
     card.classList.toggle("on-break", !!br);
     if (br) {
-      $("next-label").textContent = br.starts_on === br.ends_on ? "No gathering this week" : "We're on a break";
-      $("next-day").textContent = g ? `Back on ${fmt.day(g.start)}` : "Back soon";
+      $("next-label").textContent = br.kind === "break" ? "We're on a break" : "This week's gathering is cancelled";
+      $("next-day").textContent = g
+        ? `${br.kind === "break" ? "Back on" : "Next:"} ${fmt.day(g.start)}`
+        : "Back soon";
       $("next-time").textContent = g ? fmt.time(g.start) : "";
       $("next-place").textContent = g && g.location ? ` · ${g.location}` : "";
       $("next-countdown").textContent = br.reason || "See you soon!";
@@ -159,7 +161,7 @@
     const breakNote = br ? `
       <article class="event break-note">
         <div class="event-body">
-          <h4>${br.starts_on === br.ends_on ? "No gathering this Thursday" : "Taking a break"}</h4>
+          <h4>${br.kind === "break" ? "We're on a break" : "This Thursday is cancelled"}</h4>
           <p class="event-meta">${br.starts_on === br.ends_on
             ? fmt.day(new Date(br.starts_on + "T00:00"))
             : `${fmt.short(new Date(br.starts_on + "T00:00"))} – ${fmt.short(new Date(br.ends_on + "T00:00"))}`}</p>

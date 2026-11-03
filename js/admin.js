@@ -1,6 +1,6 @@
 // Admin page: login, requests inbox, notices and events.
 (function () {
-  const { db, esc, fmt, dayKey, cfg, gatheringOn, loadBreaks } = window.LC;
+  const { db, esc, fmt, dayKey, cfg, scheduledOn, loadBreaks } = window.LC;
   const $ = (id) => document.getElementById(id);
   const show = (el, on) => { el.hidden = !on; };
 
@@ -274,7 +274,10 @@
   let breaks = [];
   const keyDate = (k) => new Date(k + "T00:00");
   const shiftKey = (k, days) => { const d = keyDate(k); d.setDate(d.getDate() + days); return dayKey(d); };
-  const coveringBreak = (k) => breaks.find((b) => b.starts_on <= k && k <= b.ends_on);
+  const coveringBreak = (k) => {
+    const hits = breaks.filter((b) => b.starts_on <= k && k <= b.ends_on);
+    return hits.find((b) => b.kind === "break") || hits[0];
+  };
   const rangeText = (b) => b.starts_on === b.ends_on
     ? fmt.day(keyDate(b.starts_on))
     : `${fmt.short(keyDate(b.starts_on))} – ${fmt.short(keyDate(b.ends_on))}`;
@@ -290,14 +293,16 @@
     let html = "";
     for (let i = 0, found = 0; found < 12 && i < 120; i++) {
       const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i);
-      if (!gatheringOn(d)) continue;
+      if (!scheduledOn(d)) continue;
       found++;
       const k = dayKey(d);
       const br = coveringBreak(k);
       html += `
-        <div class="thu ${br ? "off" : ""}">
+        <div class="thu ${br ? (br.kind === "break" ? "brk" : "off") : ""}">
           <span class="d"><span class="dd">${fmt.day(d)}</span>
-            <span class="s">${br ? "Cancelled" + (br.reason ? " – " + esc(br.reason) : "") : cfg.gathering.time}</span></span>
+            <span class="s">${br
+              ? (br.kind === "break" ? "On break" : "Cancelled") + (br.reason ? " – " + esc(br.reason) : "")
+              : cfg.gathering.time}</span></span>
           ${br
             ? `<button class="btn small secondary" data-act="restore" data-key="${k}">Restore</button>`
             : `<button class="btn small danger" data-act="cancel" data-key="${k}">Cancel</button>`}
@@ -308,7 +313,7 @@
 
   function renderBreakList() {
     const today = dayKey(new Date());
-    const list = breaks.filter((b) => b.ends_on >= today && b.starts_on !== b.ends_on);
+    const list = breaks.filter((b) => b.ends_on >= today && b.kind === "break");
     $("break-list").innerHTML = list.length ? `<h3 class="list-sub">Planned breaks</h3>` + list.map((b) => `
       <article class="item">
         <div class="item-head">
@@ -331,15 +336,15 @@
     if (b.dataset.act === "cancel") {
       const reason = prompt(`Cancel ${fmt.day(keyDate(k))}?\nReason (optional – shown on the website):`, "");
       if (reason === null) { b.disabled = false; return; }
-      const { error } = await db.from("breaks").insert({ starts_on: k, ends_on: k, reason: reason.trim().slice(0, 200) });
+      const { error } = await db.from("breaks").insert({ kind: "cancelled", starts_on: k, ends_on: k, reason: reason.trim().slice(0, 200) });
       if (error) alert("Couldn't cancel: " + error.message);
     } else {
       const br = coveringBreak(k);
       if (br) {
         // Remove this Thursday from the break, keeping any days before/after it.
         const pieces = [];
-        if (br.starts_on < k) pieces.push({ starts_on: br.starts_on, ends_on: shiftKey(k, -1), reason: br.reason });
-        if (k < br.ends_on) pieces.push({ starts_on: shiftKey(k, 1), ends_on: br.ends_on, reason: br.reason });
+        if (br.starts_on < k) pieces.push({ kind: br.kind, starts_on: br.starts_on, ends_on: shiftKey(k, -1), reason: br.reason });
+        if (k < br.ends_on) pieces.push({ kind: br.kind, starts_on: shiftKey(k, 1), ends_on: br.ends_on, reason: br.reason });
         const { error } = await db.from("breaks").delete().eq("id", br.id);
         if (!error && pieces.length) await db.from("breaks").insert(pieces);
         if (error) alert("Couldn't restore: " + error.message);
@@ -352,6 +357,7 @@
     e.preventDefault();
     const fd = new FormData(e.target);
     const row = {
+      kind: "break",
       starts_on: fd.get("starts_on"),
       ends_on: fd.get("ends_on") || fd.get("starts_on"),
       reason: String(fd.get("reason") || "").trim()

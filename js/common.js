@@ -38,36 +38,46 @@
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }
 
-  // Breaks / cancelled Thursdays: [{ starts_on: "YYYY-MM-DD", ends_on: "YYYY-MM-DD", reason }]
+  // Breaks & cancellations: [{ kind: "break" | "cancelled", starts_on, ends_on, reason }]
+  //  - "break":     the weekly gatherings in that range are removed from the calendar
+  //  - "cancelled": the gathering stays on the calendar, marked as cancelled
   let breaks = [];
   function setBreaks(list) { breaks = list || []; }
   function breakOn(day) {
     const k = dayKey(day);
-    return breaks.find((b) => b.starts_on <= k && k <= b.ends_on) || null;
+    const hits = breaks.filter((b) => b.starts_on <= k && k <= b.ends_on);
+    return hits.find((b) => b.kind === "break") || hits[0] || null;
   }
 
-  // Weekly gathering on a given calendar day (or null). Cancelled ones carry `cancelled`.
-  function gatheringOn(day) {
+  // The weekly gathering on a day, ignoring breaks (or null if it isn't a gathering day).
+  function scheduledOn(day) {
     const g = cfg.gathering;
     if (day.getDay() !== g.weekday) return null;
     const [h, m] = g.time.split(":").map(Number);
     const start = new Date(day.getFullYear(), day.getMonth(), day.getDate(), h, m);
+    return { start, end: new Date(start.getTime() + g.durationMinutes * 60000) };
+  }
+
+  // The weekly gathering as shown on the calendar: null on break days, flagged when cancelled.
+  function gatheringOn(day) {
+    const s = scheduledOn(day);
+    if (!s) return null;
     const br = breakOn(day);
+    if (br && br.kind === "break") return null;
+    const g = cfg.gathering;
     return {
+      ...s,
       weekly: true,
       cancelled: !!br,
-      cancelReason: br ? br.reason : "",
       title: g.title,
       location: g.place,
       description: br
         ? (br.reason ? `Cancelled – ${br.reason}` : "Cancelled – no gathering this week.")
-        : "Our weekly gathering – everyone welcome!",
-      start,
-      end: new Date(start.getTime() + g.durationMinutes * 60000)
+        : "Our weekly gathering – everyone welcome!"
     };
   }
 
-  // Next weekly gathering that hasn't finished yet and isn't cancelled.
+  // Next weekly gathering that hasn't finished yet and is actually happening.
   function nextGathering(now = new Date()) {
     for (let i = 0; i < 400; i++) {
       const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
@@ -77,22 +87,22 @@
     return null;
   }
 
-  // The break covering the coming week's gathering (if it is cancelled), else null.
+  // If this week's gathering is off (break or cancelled), the entry responsible; else null.
   function upcomingBreak(now = new Date()) {
     for (let i = 0; i < 8; i++) {
       const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
-      const g = gatheringOn(d);
-      if (g && g.end > now) return g.cancelled ? breakOn(d) : null;
+      const s = scheduledOn(d);
+      if (s && s.end > now) return breakOn(d);
     }
     return null;
   }
 
   async function loadBreaks() {
     if (!db) return;
-    const { data, error } = await db.from("breaks").select("id,starts_on,ends_on,reason").order("starts_on");
+    const { data, error } = await db.from("breaks").select("id,kind,starts_on,ends_on,reason").order("starts_on");
     if (!error) setBreaks(data);
     return data || [];
   }
 
-  window.LC = { cfg, db, esc, richText, fmt, sameDay, dayKey, gatheringOn, nextGathering, upcomingBreak, loadBreaks, setBreaks };
+  window.LC = { cfg, db, esc, richText, fmt, sameDay, dayKey, scheduledOn, gatheringOn, nextGathering, upcomingBreak, loadBreaks, setBreaks };
 })();
