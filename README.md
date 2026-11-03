@@ -44,8 +44,9 @@ To use a different Supabase project, change `supabaseUrl` and `supabaseKey` in `
 ## Bible (YouVersion)
 1. Sign up (free) at https://platform.youversion.com and create an app.
 2. Copy the **app key** into `js/config.js` → `youversion.appKey`. (YouVersion app keys are *not* secrets – they're meant to be used in websites.)
-3. Optional: in the YouVersion portal, accept the licences of extra versions (e.g. NIV) so they show in the version list.
-   The Berean Standard Bible (id 3034, public domain) is the default.
+3. The version list is set in `js/config.js` → `youversion.versions` (currently NLT, NIV, NKJV, AMP, ESV).
+   Each one only appears once it's licensed for the app key in the YouVersion portal.
+   Until then the Berean Standard Bible (id 3034, public domain) is shown.
 
 ## Cost: R0 / $0
 Everything runs on free plans:
