@@ -1,0 +1,159 @@
+@page "/admin"
+@inject CommunityService Community
+@inject IJSRuntime JS
+
+<PageTitle>Admin Dashboard | Living Culture</PageTitle>
+<section class="page-heading"><div class="container"><p class="eyebrow">Living Culture leadership</p><h1>Admin dashboard.</h1><p class="lead">Publish events, share announcements and privately care for your community.</p></div></section>
+<section class="section"><div class="container">
+    @if (Loading) { <p class="muted">Checking your account permissions…</p> }
+    else if (!string.IsNullOrWhiteSpace(Error) && !User.SignedIn)
+    { <div class="message error">@Error</div> }
+    else if (!User.SignedIn)
+    { <div class="empty-state"><h2>Sign in first.</h2><p>The admin tools are protected. Please sign in with a verified account.</p><a class="btn btn-primary" href="member">Go to member sign in →</a></div> }
+    else if (!User.IsAdmin)
+    { <div class="empty-state"><h2>Administrator access required.</h2><p>This member account isn't approved as an administrator.</p><a class="btn btn-outline" href="member">View your member account</a></div> }
+    else
+    {
+        <p class="message">Signed in as an administrator. Changes are saved directly to the Living Culture database.</p>
+        <div class="forms-grid admin-forms">
+            <form class="form-card" @onsubmit="AddEventAsync" @onsubmit:preventDefault>
+                <h2>Add an event</h2>
+                <label>Event title<input @bind="EventTitle" required minlength="3" maxlength="140" placeholder="Worship Night" /></label>
+                <label>Date and time (South African time)<input type="datetime-local" required @bind="EventStart" /></label>
+                <label>Venue<input @bind="EventVenue" maxlength="180" placeholder="Church hall" /></label>
+                <label>Details<textarea @bind="EventDetails" maxlength="3000" rows="4"></textarea></label>
+                <button class="btn btn-primary" disabled="@Busy" type="submit">Publish event →</button>
+            </form>
+            <form class="form-card" @onsubmit="AddNoticeAsync" @onsubmit:preventDefault>
+                <h2>Post a notice</h2>
+                <label>Heading<input @bind="NoticeTitle" required minlength="3" maxlength="140" /></label>
+                <label>Announcement<textarea @bind="NoticeBody" required maxlength="6000" rows="5"></textarea></label>
+                <label>Expiry date (optional)<input type="date" @bind="NoticeExpiry" /></label>
+                <button class="btn btn-primary" disabled="@Busy" type="submit">Publish notice →</button>
+            </form>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(StatusMessage)) { <div class="message @(ActionError ? "error" : "")" role="status">@StatusMessage</div> }
+
+        <div class="manage-grid">
+            <section class="content-card"><h2>Manage calendar</h2>
+                @if (Events.Count == 0) { <p class="muted">No additional events yet.</p> }
+                @foreach (var e in Events)
+                {
+                    <div class="manage-row"><div><strong>@e.Title</strong><span class="muted small">@e.StartsAt.ToOffset(TimeSpan.FromHours(2)).ToString("dd MMM yyyy · HH:mm") SAST</span></div>
+                    <button class="btn btn-outline btn-small" @onclick="() => DeleteEventAsync(e.Id)" disabled="@Busy">Delete</button></div>
+                }
+            </section>
+            <section class="content-card"><h2>Manage notices</h2>
+                @if (Notices.Count == 0) { <p class="muted">No notices yet.</p> }
+                @foreach (var n in Notices)
+                {
+                    <div class="manage-row"><div><strong>@n.Title</strong><span class="muted small">@n.CreatedAt.ToOffset(TimeSpan.FromHours(2)).ToString("dd MMM yyyy")</span></div>
+                    <button class="btn btn-outline btn-small" @onclick="() => DeleteNoticeAsync(n.Id)" disabled="@Busy">Delete</button></div>
+                }
+            </section>
+        </div>
+        <section class="content-card inbox-panel">
+            <div class="inbox-heading"><div><p class="eyebrow">Private ministry inbox</p><h2>Prayer requests &amp; faith questions</h2></div><button class="btn btn-outline btn-small" @onclick="LoadDashboardAsync" disabled="@Busy">Refresh</button></div>
+            <p class="notice-help">This inbox contains sensitive messages. Please keep requests confidential and respond through approved ministry channels.</p>
+            @if (Inquiries.Count == 0) { <p class="muted">No requests have been received yet.</p> }
+            @foreach (var item in Inquiries)
+            {
+                <article class="inquiry-item">
+                    <p class="eyebrow">@(item.Kind == "prayer" ? "Prayer request" : "Faith & life question") · @item.CreatedAt.ToOffset(TimeSpan.FromHours(2)).ToString("dd MMM yyyy HH:mm")</p>
+                    <h3>@item.FullName</h3>
+                    <p class="multiline">@item.Message</p>
+                    <p class="muted small">@(item.KeepPrivate ? "Requested privacy" : "Submitted to ministry leadership")</p>
+                    <a href="@($"mailto:{item.Email}")">Reply to @item.Email →</a>
+                </article>
+            }
+        </section>
+    }
+</div></section>
+
+@code {
+    private MemberState User = new();
+    private List<EventItem> Events = new();
+    private List<NoticeItem> Notices = new();
+    private List<InquiryItem> Inquiries = new();
+    private bool Loading = true;
+    private bool Busy;
+    private bool ActionError;
+    private string Error = "";
+    private string StatusMessage = "";
+    private string EventTitle = "";
+    private string EventVenue = "";
+    private string EventDetails = "";
+    private string EventStart = DateTime.Now.AddDays(1).ToString("yyyy-MM-ddTHH:mm");
+    private string NoticeTitle = "";
+    private string NoticeBody = "";
+    private string NoticeExpiry = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try {
+            User = await Community.WhoAmIAsync();
+            if(User.IsAdmin) await LoadDashboardAsync();
+        }
+        catch (Exception ex) { Error = "Could not verify administrator permissions: " + ex.Message; }
+        finally { Loading = false; }
+    }
+    private async Task LoadDashboardAsync()
+    {
+        try {
+            var events = await Community.EventsAsync(true);
+            var notices = await Community.NoticesAsync(true);
+            var inbox = await Community.InquiriesAsync();
+            Events = events.OrderByDescending(e => e.StartsAt).ToList();
+            Notices = notices.OrderByDescending(n => n.CreatedAt).ToList();
+            Inquiries = inbox;
+        } catch (Exception ex) { ActionError = true; StatusMessage = "Could not load admin data: " + ex.Message; }
+    }
+    private async Task AddEventAsync()
+    {
+        if (Busy || !User.IsAdmin) return;
+        Busy = true; ActionError = false; StatusMessage = "";
+        try {
+            if(!DateTime.TryParseExact(EventStart, "yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out var local))
+                throw new InvalidOperationException("Please enter a valid date and time.");
+            var starts = new DateTimeOffset(DateTime.SpecifyKind(local, DateTimeKind.Unspecified), TimeSpan.FromHours(2));
+            await Community.AddEventAsync(EventTitle.Trim(), EventDetails.Trim(), EventVenue.Trim(), starts);
+            StatusMessage = "Event published successfully.";
+            EventTitle = ""; EventVenue = ""; EventDetails = "";
+            await LoadDashboardAsync();
+        } catch(Exception ex) { ActionError = true; StatusMessage = "Unable to add event: " + ex.Message; }
+        finally { Busy = false; }
+    }
+    private async Task AddNoticeAsync()
+    {
+        if (Busy || !User.IsAdmin) return;
+        Busy = true; ActionError = false; StatusMessage = "";
+        try {
+            string? expiry = null;
+            if (!string.IsNullOrWhiteSpace(NoticeExpiry)) {
+                var date = DateTime.ParseExact(NoticeExpiry, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+                expiry = new DateTimeOffset(date.Date.AddDays(1).AddTicks(-1), TimeSpan.FromHours(2)).ToUniversalTime().ToString("O");
+            }
+            await Community.AddNoticeAsync(NoticeTitle.Trim(), NoticeBody.Trim(), expiry);
+            StatusMessage = "Notice published successfully.";
+            NoticeTitle = ""; NoticeBody = ""; NoticeExpiry = "";
+            await LoadDashboardAsync();
+        } catch(Exception ex) { ActionError = true; StatusMessage = "Unable to add notice: " + ex.Message; }
+        finally { Busy = false; }
+    }
+    private async Task DeleteEventAsync(string id)
+    {
+        if (Busy || !User.IsAdmin || !await JS.InvokeAsync<bool>("confirm", "Permanently delete this event?")) return;
+        Busy = true; ActionError = false; StatusMessage = "";
+        try { await Community.DeleteEventAsync(id); StatusMessage = "Event deleted."; await LoadDashboardAsync(); }
+        catch(Exception ex) { ActionError = true; StatusMessage = ex.Message; }
+        finally { Busy = false; }
+    }
+    private async Task DeleteNoticeAsync(string id)
+    {
+        if (Busy || !User.IsAdmin || !await JS.InvokeAsync<bool>("confirm", "Permanently delete this notice?")) return;
+        Busy = true; ActionError = false; StatusMessage = "";
+        try { await Community.DeleteNoticeAsync(id); StatusMessage = "Notice deleted."; await LoadDashboardAsync(); }
+        catch(Exception ex) { ActionError = true; StatusMessage = ex.Message; }
+        finally { Busy = false; }
+    }
+}
