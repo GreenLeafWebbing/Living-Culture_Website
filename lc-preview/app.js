@@ -215,7 +215,7 @@ function wireRequests(){
 async function init(){
  if(!ready){console.info("Living Culture: Supabase backend not configured yet.");return;}
  try{
-  const pkg=await import("https://esm.sh/@supabase/supabase-js@2");
+  const pkg=await import("https://esm.sh/@supabase/supabase-js@2.57.0");
   db=pkg.createClient(cfg.supabaseUrl,cfg.supabasePublishableKey);
   show("auth-unconfigured",false);
   wireAuth();wireRequests();setupTurnstile();
