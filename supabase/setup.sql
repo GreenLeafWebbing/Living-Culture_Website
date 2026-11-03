@@ -128,10 +128,11 @@ create trigger requests_rate_limit before insert on public.requests
 revoke execute on function public.requests_rate_limit() from public, anon, authenticated;
 
 -- ---------- Breaks / cancelled Thursdays -------------------------------
--- Any weekly gathering between starts_on and ends_on (inclusive) is cancelled.
--- A single cancelled Thursday = same start and end date.
+-- kind 'break':     weekly gatherings between starts_on and ends_on are removed from the calendar.
+-- kind 'cancelled': the gathering stays on the calendar, marked as cancelled.
 create table if not exists public.breaks (
   id         uuid primary key default gen_random_uuid(),
+  kind       text not null default 'break' check (kind in ('break', 'cancelled')),
   starts_on  date not null,
   ends_on    date not null,
   reason     text not null default '' check (length(reason) <= 200),

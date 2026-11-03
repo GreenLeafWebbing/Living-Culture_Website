@@ -5,7 +5,7 @@ A simple static website (GitHub Pages) with a free Supabase database behind it.
 - **Notice board** – posted by admins
 - **Calendar** – the weekly gathering (every Thursday 19:00) shows automatically; admins add special events
 - **Prayer & questions** – anyone can send a prayer request or a question about faith & life; only admins can read them
-- **Cancel a Thursday / take a break** – admins can cancel single Thursdays or every Thursday between two dates (e.g. December holidays); the site shows “We're on a break – back on …”
+- **Breaks & cancellations** – admins can put the group *on break* for a date range (those Thursdays disappear from the calendar and the site says “We're on a break – back on …”), or *cancel* a single Thursday (it stays on the calendar marked “Cancelled”)
 - **Leader login** (`admin.html`) – only admins can log in and manage everything
 
 ## Files
