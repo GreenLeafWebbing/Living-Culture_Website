@@ -1,7 +1,7 @@
 // Supabase Edge Function: submit-inquiry
 // Deploy: supabase functions deploy submit-inquiry --no-verify-jwt
 // Secret values belong in Supabase Edge Functions, never GitHub.
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2.57.0";
 const allowedOrigin = Deno.env.get("PUBLIC_SITE_ORIGIN") || "https://greenleafwebbing.github.io";
 function headers(origin: string | null) {
   return {
@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
     const body=new URLSearchParams({secret:captchaSecret,response:captcha});
     const verify=await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify",{method:"POST",body});
     const challenge=await verify.json();
-    if(!challenge.success) return response(400,"Human verification failed. Please retry.",origin);
+    if(!challenge.success || challenge.hostname !== "greenleafwebbing.github.io") return response(400,"Human verification failed. Please retry.",origin);
     const url=Deno.env.get("SUPABASE_URL"),key=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     if(!url||!key) return response(503,"Backend not configured.",origin);
     const admin=createClient(url,key,{auth:{autoRefreshToken:false,persistSession:false}});
@@ -54,8 +54,7 @@ Deno.serve(async (req) => {
         body:JSON.stringify({
           from:sender,to:[recipient],
           subject:kind==="prayer"?"Living Culture: prayer request":"Living Culture: faith & life question",
-          text:["New confidential submission","Type: "+kind,"Name: "+full_name.trim(),
-          "Reply email: "+email.trim(),"Private: "+(keep_private!==false?"Yes":"No"),"",message.trim()].join("\n")
+          text:"A confidential submission has arrived. Sign into the Living Culture admin portal to review it. For privacy, the request and personal details are not included in this email."
         })
       });
       if(!mail.ok) console.error("Notification delivery HTTP",mail.status);
