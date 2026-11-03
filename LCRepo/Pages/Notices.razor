@@ -1,0 +1,34 @@
+@page "/notices"
+@inject CommunityService Community
+
+<PageTitle>Notice Board | Living Culture</PageTitle>
+<section class="page-heading"><div class="container"><p class="eyebrow">Stay connected</p><h1>Notice board.</h1><p class="lead">Important announcements, special events and ministry news from Living Culture.</p></div></section>
+<section class="section"><div class="container">
+    @if (Busy){<p class="muted">Loading announcements…</p>}
+    else if (!string.IsNullOrEmpty(Error)){<div class="message error" role="alert">@Error</div>}
+    else if (Notices.Count == 0){<div class="empty-state"><h2>More news soon.</h2><p>Big announcements will appear here when published by our team.</p></div>}
+    else {
+        <div class="cards-grid">
+            @foreach(var notice in Notices)
+            {
+                <article class="content-card">
+                    <p class="eyebrow">Announcement · @notice.CreatedAt.ToOffset(TimeSpan.FromHours(2)).ToString("dd MMM yyyy")</p>
+                    <h2>@notice.Title</h2>
+                    <p class="multiline">@notice.Body</p>
+                    @if(notice.ExpiresAt.HasValue){<p class="muted small">Available until @notice.ExpiresAt.Value.ToOffset(TimeSpan.FromHours(2)).ToString("dd MMM yyyy")</p>}
+                </article>
+            }
+        </div>
+    }
+</div></section>
+@code {
+    private List<NoticeItem> Notices = new();
+    private bool Busy = true;
+    private string Error = "";
+    protected override async Task OnInitializedAsync()
+    {
+        try { Notices = await Community.NoticesAsync(); }
+        catch (Exception ex) { Error = ex.Message; }
+        finally { Busy = false; }
+    }
+}
