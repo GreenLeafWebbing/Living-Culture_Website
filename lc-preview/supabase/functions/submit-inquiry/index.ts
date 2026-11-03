@@ -1,64 +1,113 @@
-// Supabase Edge Function: submit-inquiry
-// Deploy: supabase functions deploy submit-inquiry --no-verify-jwt
-// Secret values belong in Supabase Edge Functions, never GitHub.
+// Living Culture confidential inquiry handler.
+// Public guest requests are rate-limited server-side. A Turnstile secret can be
+// configured later for additional free bot protection.
+// Secrets must stay in the Supabase Edge Function environment, never GitHub.
 import { createClient } from "npm:@supabase/supabase-js@2.57.0";
-const allowedOrigin = Deno.env.get("PUBLIC_SITE_ORIGIN") || "https://greenleafwebbing.github.io";
-function headers(origin: string | null) {
-  return {
-    "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": origin === allowedOrigin ? origin : allowedOrigin,
-    "Access-Control-Allow-Headers": "content-type, apikey, authorization, x-client-info",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Vary": "Origin"
-  };
+
+const allowedOrigin = "https://greenleafwebbing.github.io";
+const cors = {
+  "Access-Control-Allow-Origin": allowedOrigin,
+  "Access-Control-Allow-Headers": "content-type, apikey, authorization, x-client-info",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Content-Type": "application/json",
+  "Vary": "Origin"
+};
+const reply = (status: number, message: string) =>
+  new Response(JSON.stringify({ message }), { status, headers: cors });
+
+async function keyedRateHash(secret: string, value: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+  );
+  const bytes = new Uint8Array(await crypto.subtle.sign("HMAC", key, encoder.encode(value)));
+  return Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("");
 }
-function response(status: number, message: string, origin: string | null) {
-  return new Response(JSON.stringify({ message }), { status, headers: headers(origin) });
-}
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin");
-  if (origin && origin !== allowedOrigin) return response(403, "Origin not permitted.", origin);
-  if (req.method === "OPTIONS") return new Response(null, {status:204,headers:headers(origin)});
-  if (req.method !== "POST") return response(405,"Method not allowed.",origin);
-  if (Number(req.headers.get("content-length")||0) > 12000)
-    return response(413,"Request too large.",origin);
+  if (origin !== allowedOrigin) return reply(403, "Origin not allowed.");
+  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
+  if (req.method !== "POST") return reply(405, "Method not allowed.");
+  if (!req.headers.get("content-type")?.startsWith("application/json"))
+    return reply(415, "Expected JSON.");
   try {
-    const {kind,full_name,email,message,keep_private,consent,captcha,website} = await req.json();
-    if (website) return response(200,"Thank you.",origin);
-    if (!["prayer","question"].includes(kind) ||
-        typeof full_name!=="string" || full_name.trim().length<1 || full_name.length>100 ||
-        typeof email!=="string" || email.length>254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
-        typeof message!=="string" || message.trim().length<10 || message.length>5000 ||
-        consent!==true || typeof captcha!=="string")
-      return response(400,"Please complete all required fields.",origin);
-    const captchaSecret=Deno.env.get("TURNSTILE_SECRET");
-    if(!captchaSecret) return response(503,"Form protection not configured.",origin);
-    const body=new URLSearchParams({secret:captchaSecret,response:captcha});
-    const verify=await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify",{method:"POST",body});
-    const challenge=await verify.json();
-    if(!challenge.success || challenge.hostname !== "greenleafwebbing.github.io") return response(400,"Human verification failed. Please retry.",origin);
-    const url=Deno.env.get("SUPABASE_URL"),key=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    if(!url||!key) return response(503,"Backend not configured.",origin);
-    const admin=createClient(url,key,{auth:{autoRefreshToken:false,persistSession:false}});
-    const {error}=await admin.from("lc_inquiries").insert({
-      kind,full_name:full_name.trim(),email:email.trim(),message:message.trim(),
-      keep_private:keep_private!==false,consent:true
-    });
-    if(error){console.error("Storage failure:",error.code);return response(503,"Unable to store your request.",origin);}
-    const emailKey=Deno.env.get("RESEND_API_KEY"),recipient=Deno.env.get("ADMIN_NOTIFY_EMAIL"),
-          sender=Deno.env.get("RESEND_FROM_EMAIL");
-    if(emailKey&&recipient&&sender){
-      const mail=await fetch("https://api.resend.com/emails",{
-        method:"POST",
-        headers:{"Authorization":"Bearer "+emailKey,"Content-Type":"application/json"},
-        body:JSON.stringify({
-          from:sender,to:[recipient],
-          subject:kind==="prayer"?"Living Culture: prayer request":"Living Culture: faith & life question",
-          text:"A confidential submission has arrived. Sign into the Living Culture admin portal to review it. For privacy, the request and personal details are not included in this email."
-        })
+    const raw = await req.text();
+    if (raw.length > 12000) return reply(413, "Request too large.");
+    const body = JSON.parse(raw);
+    const { kind, full_name, email, message, keep_private, consent, website, captcha } = body;
+    if (website) return reply(200, "Thank you.");
+    if (!["prayer", "question"].includes(kind) ||
+        typeof full_name !== "string" || !full_name.trim() || full_name.length > 100 ||
+        typeof email !== "string" || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ||
+        typeof message !== "string" || message.trim().length < 10 || message.length > 5000 ||
+        consent !== true || typeof keep_private !== "boolean") {
+      return reply(400, "Please complete the required form fields.");
+    }
+
+    const captchaSecret = Deno.env.get("TURNSTILE_SECRET");
+    if (captchaSecret) {
+      if (typeof captcha !== "string" || !captcha) return reply(400, "Human verification is required.");
+      const validation = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+        method: "POST", body: new URLSearchParams({ secret: captchaSecret, response: captcha })
       });
-      if(!mail.ok) console.error("Notification delivery HTTP",mail.status);
-    }else console.warn("Notification email not configured; submission stored.");
-    return response(200,"Your request has been received. Thank you for trusting us.",origin);
-  }catch(err){console.error("Request error:",err instanceof Error?err.message:"unknown");return response(400,"Unable to process request.",origin);}
+      const verdict = await validation.json();
+      if (!verdict.success || verdict.hostname !== "greenleafwebbing.github.io")
+        return reply(400, "Human verification failed. Please try again.");
+    }
+
+    const url = Deno.env.get("SUPABASE_URL");
+    const secret = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!url || !secret) return reply(503, "Submission service unavailable.");
+    const sourceIp = req.headers.get("cf-connecting-ip") ||
+      req.headers.get("x-real-ip") ||
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "";
+    const identity = sourceIp ? "ip:" + sourceIp : "email:" + email.trim().toLowerCase();
+    const rateKey = await keyedRateHash(secret, identity);
+    const admin = createClient(url, secret, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
+    const { error } = await admin.rpc("lc_accept_inquiry", {
+      in_rate_key: rateKey,
+      in_kind: kind,
+      in_full_name: full_name.trim(),
+      in_email: email.trim().toLowerCase(),
+      in_message: message.trim(),
+      in_keep_private: keep_private,
+      in_consent: true
+    });
+    if (error?.message?.includes("RATE_LIMIT_EXCEEDED"))
+      return reply(429, "Too many requests. Please try again later.");
+    if (error) {
+      console.error("Inquiry storage failed:", error.code || "unknown");
+      return reply(503, "Your message could not be saved. Please try again.");
+    }
+
+    // Notify by email only if a FREE provider is configured in Edge Function secrets.
+    // Never include confidential message contents in notification emails.
+    const mailKey = Deno.env.get("RESEND_API_KEY");
+    const mailFrom = Deno.env.get("RESEND_FROM_EMAIL");
+    const mailTo = Deno.env.get("ADMIN_NOTIFY_EMAIL");
+    if (mailKey && mailFrom && mailTo) {
+      try {
+        const mail = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { Authorization: "Bearer " + mailKey, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            from: mailFrom,
+            to: [mailTo],
+            subject: kind === "prayer" ? "Living Culture: New prayer request" :
+              "Living Culture: New question about faith and life",
+            text: "A confidential message has arrived. Sign in to the Living Culture admin dashboard to read it."
+          })
+        });
+        if (!mail.ok) console.warn("Notification delivery failed:", mail.status);
+      } catch (e) {
+        console.warn("Notification provider temporarily unavailable.");
+      }
+    }
+    return reply(200, "Your message was received. Thank you for trusting Living Culture.");
+  } catch (error) {
+    console.error("Request processing error:", error instanceof Error ? error.name : "unknown");
+    return reply(400, "Unable to process the request.");
+  }
 });
