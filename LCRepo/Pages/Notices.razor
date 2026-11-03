@@ -6,10 +6,10 @@
 <section class="section"><div class="container">
     @if (Busy){<p class="muted">Loading announcements…</p>}
     else if (!string.IsNullOrEmpty(Error)){<div class="message error" role="alert">@Error</div>}
-    else if (Notices.Count == 0){<div class="empty-state"><h2>More news soon.</h2><p>Big announcements will appear here when published by our team.</p></div>}
+    else if (Announcements.Count == 0){<div class="empty-state"><h2>More news soon.</h2><p>Big announcements will appear here when published by our team.</p></div>}
     else {
         <div class="cards-grid">
-            @foreach(var notice in Notices)
+            @foreach(var notice in Announcements)
             {
                 <article class="content-card">
                     <p class="eyebrow">Announcement · @notice.CreatedAt.ToOffset(TimeSpan.FromHours(2)).ToString("dd MMM yyyy")</p>
@@ -22,12 +22,12 @@
     }
 </div></section>
 @code {
-    private List<NoticeItem> Notices = new();
+    private List<NoticeItem> Announcements = new();
     private bool Busy = true;
     private string Error = "";
     protected override async Task OnInitializedAsync()
     {
-        try { Notices = await Community.NoticesAsync(); }
+        try { Announcements = await Community.NoticesAsync(); }
         catch (Exception ex) { Error = ex.Message; }
         finally { Busy = false; }
     }
