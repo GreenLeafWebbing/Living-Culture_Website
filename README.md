@@ -62,5 +62,16 @@ Everything runs on free plans:
 The only optional cost would be your own domain name (e.g. livingculture.co.za); the free
 `greenleafwebbing.github.io/Living-Culture_Website/` address works fine without one.
 
+## WordPress version
+The site can also run inside any WordPress website as a plugin, at `yoursite.com/livingculture/`
+(its own pages, so the WordPress theme doesn't change the design).
+
+1. Build the plugin zip: `tools/build-wordpress-plugin.sh` → `dist/living-culture-wordpress.zip`
+2. WordPress → **Plugins → Add New → Upload Plugin** → choose the zip → **Install Now** → **Activate**
+3. Visit `yoursite.com/livingculture/` (the address can be changed under **Settings → Living Culture**)
+
+Data stays in Supabase and leaders still use the Living Culture leader login (not WordPress accounts).
+To update, rebuild the zip and upload it again – WordPress offers to replace the old version.
+
 ## Run locally
 Just open `index.html` in a browser, or run `python3 -m http.server` and visit http://localhost:8000.
