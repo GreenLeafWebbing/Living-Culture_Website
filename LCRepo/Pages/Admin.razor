@@ -83,10 +83,10 @@
     private string EventTitle = "";
     private string EventVenue = "";
     private string EventDetails = "";
-    private string EventStart = DateTime.Now.AddDays(1).ToString("yyyy-MM-ddTHH:mm");
+    private DateTime EventStart = DateTime.Now.AddDays(1);
     private string NoticeTitle = "";
     private string NoticeBody = "";
-    private string NoticeExpiry = "";
+    private DateTime? NoticeExpiry;
 
     protected override async Task OnInitializedAsync()
     {
@@ -113,9 +113,7 @@
         if (Busy || !User.IsAdmin) return;
         Busy = true; ActionError = false; StatusMessage = "";
         try {
-            if(!DateTime.TryParseExact(EventStart, "yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out var local))
-                throw new InvalidOperationException("Please enter a valid date and time.");
-            var starts = new DateTimeOffset(DateTime.SpecifyKind(local, DateTimeKind.Unspecified), TimeSpan.FromHours(2));
+            var starts = new DateTimeOffset(DateTime.SpecifyKind(EventStart, DateTimeKind.Unspecified), TimeSpan.FromHours(2));
             await Community.AddEventAsync(EventTitle.Trim(), EventDetails.Trim(), EventVenue.Trim(), starts);
             StatusMessage = "Event published successfully.";
             EventTitle = ""; EventVenue = ""; EventDetails = "";
@@ -129,13 +127,13 @@
         Busy = true; ActionError = false; StatusMessage = "";
         try {
             string? expiry = null;
-            if (!string.IsNullOrWhiteSpace(NoticeExpiry)) {
-                var date = DateTime.ParseExact(NoticeExpiry, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            if (NoticeExpiry.HasValue) {
+                var date = NoticeExpiry.Value;
                 expiry = new DateTimeOffset(date.Date.AddDays(1).AddTicks(-1), TimeSpan.FromHours(2)).ToUniversalTime().ToString("O");
             }
             await Community.AddNoticeAsync(NoticeTitle.Trim(), NoticeBody.Trim(), expiry);
             StatusMessage = "Notice published successfully.";
-            NoticeTitle = ""; NoticeBody = ""; NoticeExpiry = "";
+            NoticeTitle = ""; NoticeBody = ""; NoticeExpiry = null;
             await LoadDashboardAsync();
         } catch(Exception ex) { ActionError = true; StatusMessage = "Unable to add notice: " + ex.Message; }
         finally { Busy = false; }
