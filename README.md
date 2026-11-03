@@ -39,5 +39,18 @@ A simple static website (GitHub Pages) with a free Supabase database behind it.
 To use a different Supabase project, change `supabaseUrl` and `supabaseKey` in `js/config.js`
 (use the *publishable/anon* key – **never** the secret/service_role key).
 
+## Cost: R0 / $0
+Everything runs on free plans:
+- **GitHub Pages** – free hosting (the repo must stay **public** on a free GitHub account).
+- **Supabase Free** – database + admin login (500 MB of data – years of notices and requests).
+- **GitHub Actions** – `keep-alive.yml` pings the database every 3 days, because free Supabase
+  projects pause after ~1 week with no activity. If it ever does pause, click *Restore* in the
+  Supabase dashboard (also free).
+- Fonts and the Supabase library load from free public CDNs.
+- No paid email service is needed.
+
+The only optional cost would be your own domain name (e.g. livingculture.co.za); the free
+`greenleafwebbing.github.io/Living-Culture_Website/` address works fine without one.
+
 ## Run locally
 Just open `index.html` in a browser, or run `python3 -m http.server` and visit http://localhost:8000.
