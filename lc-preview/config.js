@@ -1,7 +1,7 @@
-// PUBLIC browser configuration only. Never put passwords, secret/service keys, or Resend keys here.
-// After creating a Supabase project, fill in its Project URL and PUBLISHABLE key.
+// PUBLIC Supabase browser configuration. Never put secret/service keys or passwords here.
 window.LC_CONFIG = Object.freeze({
-  supabaseUrl: "",
-  supabasePublishableKey: "",
+  supabaseUrl: "https://pzdszmlbjtcepevweefc.supabase.co",
+  supabasePublishableKey: "sb_publishable_RFyj9bTwV9iVg-GOWpgPRA_plWbmcbt",
+  // Optional: Cloudflare Turnstile site key for additional bot protection.
   turnstileSiteKey: ""
 });
