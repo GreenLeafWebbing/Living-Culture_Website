@@ -6,7 +6,7 @@ window.LC_CONFIG = {
 
   // YouVersion Bible (https://platform.youversion.com) – the app key is NOT secret; it's meant for websites.
   youversion: {
-    appKey: "",            // paste your YouVersion Platform app key here
+    appKey: "39OdCXVGTinw6x79ibl97ZS2XOCq7VfGvcC0RFAprTnKwNIj",
     defaultBibleId: 3034,  // 3034 = Berean Standard Bible (public domain)
     language: "en"
   },
