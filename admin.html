@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Leaders – Living Culture</title>
+  <link rel="icon" href="assets/logo.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin">
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a href="index.html" class="brand">
+        <img src="assets/logo.jpg" alt="" class="brand-logo">
+        <span>Living Culture</span>
+      </a>
+      <nav class="nav">
+        <a href="index.html">← Website</a>
+        <a href="#" id="logout" hidden>Log out</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap admin-main">
+    <!-- ===== Login ===== -->
+    <section id="login-view" class="login" hidden>
+      <form id="login-form" class="card form">
+        <h1>Leader login</h1>
+        <p class="muted">Only for Living Culture admins.</p>
+        <label class="field"><span>Email</span>
+          <input type="email" name="email" autocomplete="username" required></label>
+        <label class="field"><span>Password</span>
+          <input type="password" name="password" autocomplete="current-password" required></label>
+        <button class="btn" type="submit">Log in</button>
+        <p id="login-status" class="form-status" role="status"></p>
+      </form>
+    </section>
+
+    <!-- ===== Dashboard ===== -->
+    <section id="dash-view" hidden>
+      <div class="dash-head">
+        <h1>Admin</h1>
+        <p class="muted" id="who"></p>
+      </div>
+
+      <div class="tabs" role="tablist">
+        <button role="tab" data-tab="requests" class="tab active">Requests <span class="count" id="new-count" hidden></span></button>
+        <button role="tab" data-tab="notices" class="tab">Notice board</button>
+        <button role="tab" data-tab="events" class="tab">Calendar</button>
+      </div>
+
+      <!-- Requests -->
+      <div class="panel" data-panel="requests">
+        <div class="filter-row">
+          <select id="req-filter" aria-label="Filter">
+            <option value="new">New</option>
+            <option value="done">Done</option>
+            <option value="all">All</option>
+          </select>
+          <button class="btn small secondary" id="req-refresh">Refresh</button>
+        </div>
+        <div id="req-list" class="admin-list"></div>
+      </div>
+
+      <!-- Notices -->
+      <div class="panel" data-panel="notices" hidden>
+        <form id="notice-form" class="card form">
+          <h2 id="notice-form-title">New notice</h2>
+          <label class="field"><span>Title</span>
+            <input type="text" name="title" maxlength="120" required></label>
+          <label class="field"><span>Message <em>(optional)</em></span>
+            <textarea name="body" rows="4" maxlength="4000"></textarea></label>
+          <div class="field-row">
+            <label class="field"><span>Hide after <em>(optional)</em></span>
+              <input type="date" name="expires_on"></label>
+            <label class="check"><input type="checkbox" name="pinned"> Pin to top</label>
+          </div>
+          <div class="btn-row">
+            <button class="btn" type="submit">Save notice</button>
+            <button class="btn secondary" type="button" id="notice-cancel" hidden>Cancel</button>
+          </div>
+          <p class="form-status" id="notice-status" role="status"></p>
+        </form>
+        <h2 class="list-title">Current notices</h2>
+        <div id="notice-admin-list" class="admin-list"></div>
+      </div>
+
+      <!-- Events -->
+      <div class="panel" data-panel="events" hidden>
+        <p class="muted info">The weekly Thursday 19:00 gathering appears on the calendar automatically – only add special events here.</p>
+        <form id="event-form" class="card form">
+          <h2 id="event-form-title">New event</h2>
+          <label class="field"><span>Title</span>
+            <input type="text" name="title" maxlength="120" required></label>
+          <div class="field-row three">
+            <label class="field"><span>Date</span><input type="date" name="date" required></label>
+            <label class="field"><span>Start</span><input type="time" name="start" required></label>
+            <label class="field"><span>End <em>(optional)</em></span><input type="time" name="end"></label>
+          </div>
+          <label class="field"><span>Location <em>(optional)</em></span>
+            <input type="text" name="location" maxlength="200"></label>
+          <label class="field"><span>Details <em>(optional)</em></span>
+            <textarea name="description" rows="3" maxlength="2000"></textarea></label>
+          <div class="btn-row">
+            <button class="btn" type="submit">Save event</button>
+            <button class="btn secondary" type="button" id="event-cancel" hidden>Cancel</button>
+          </div>
+          <p class="form-status" id="event-status" role="status"></p>
+        </form>
+        <h2 class="list-title">Upcoming events</h2>
+        <div id="event-admin-list" class="admin-list"></div>
+      </div>
+    </section>
+
+    <p id="not-admin" class="card notice-box" hidden>
+      You're logged in, but this account isn't an admin. Ask the site owner to add you.
+    </p>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

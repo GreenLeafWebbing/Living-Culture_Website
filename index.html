@@ -1,53 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Landing Page</title>
-    <link rel="stylesheet" href="Index.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Living Culture – Young Adult Bible Study</title>
+  <meta name="description" content="Living Culture is a young adult Bible study. We gather every Thursday at 19:00.">
+  <link rel="icon" href="assets/logo.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <div class="heading-bar">
-        <h1>
-            <a class="Back2Index" href="index.html">
-                Living Culture
-            </a>
-        </h1>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a href="#top" class="brand">
+        <img src="assets/logo.jpg" alt="" class="brand-logo">
+        <span>Living Culture</span>
+      </a>
+      <nav class="nav" aria-label="Main">
+        <a href="#notices">Notices</a>
+        <a href="#calendar">Calendar</a>
+        <a href="#requests">Requests</a>
+      </nav>
     </div>
+  </header>
 
-    <div class="navbar">
-        <div class="navbar-content"> 
-            <a href="Quesions.html" class="nav-link">Have Quesions</a>
-            <a href="Info.html" class="nav-link" >INFO</a> 
-            <a href="About.html" class="nav-link" >ABOUT</a>
-            <a href="ContactUs.html" class="nav-link" >CONTACK US</a>  
+  <main id="top">
+    <!-- ===== Hero ===== -->
+    <section class="hero">
+      <div class="wrap hero-inner">
+        <div class="hero-text">
+          <p class="eyebrow">Young adult Bible study</p>
+          <h1>Living out the Word, <span class="hl">together.</span></h1>
+          <p class="lead">
+            We're young adults learning to follow Jesus in everyday life –
+            opening the Bible, asking honest questions and praying for each other.
+            Come as you are.
+          </p>
+          <blockquote class="verse">
+            “Do not conform to the pattern of this world, but be transformed by the renewing of your mind.”
+            <cite>Romans 12:2</cite>
+          </blockquote>
         </div>
-    </div>
 
-    <div class="FirstHead">
-        <h1>
-            Welcome to the Living Culture Website
-        </h1>
-        <h6>
-            Feel Free to Browse <br>
-            You know what would be even better<br>
-            You joining us Trursday @19:00 @LCF
-        </h6>
-    </div>
+        <aside class="next-card" aria-live="polite">
+          <p class="next-label">Next gathering</p>
+          <p class="next-day" id="next-day">Thursday</p>
+          <p class="next-time"><span id="next-time">19:00</span><span id="next-place"></span></p>
+          <p class="next-countdown" id="next-countdown"></p>
+          <p class="next-note">Every Thursday · 19:00</p>
+        </aside>
+      </div>
+    </section>
 
-    <div class="containerNotice">
-        <div class="notice-board">
-            <h2>Notice Board</h2>
-            <ul class="notices">
-                <li>Journey to Signifcance starting 28 Jan 2025.</li>
-                <li>#imagin in April</li>
-                <li class="nextLC">Next Living Culture: </li>
-                <li><a href="Quesions.html">Click here to ask your Quesion</a></li>
-            </ul>
-        </div> 
-        
+    <!-- ===== Notice board ===== -->
+    <section id="notices" class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Notice board</h2>
+          <p>What's happening at Living Culture.</p>
+        </div>
+        <div id="notice-list" class="notice-grid">
+          <p class="muted">Loading notices…</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Calendar ===== -->
+    <section id="calendar" class="section section-alt">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Calendar</h2>
+          <p>Our Thursday gatherings and special events.</p>
+        </div>
+
+        <div class="cal-layout">
+          <div class="cal-card">
+            <div class="cal-toolbar">
+              <button class="icon-btn" id="cal-prev" aria-label="Previous month">‹</button>
+              <h3 id="cal-title">Month</h3>
+              <button class="icon-btn" id="cal-next" aria-label="Next month">›</button>
+            </div>
+            <div class="cal-grid cal-weekdays" aria-hidden="true">
+              <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+            </div>
+            <div class="cal-grid" id="cal-days" role="grid"></div>
+            <div class="cal-legend">
+              <span><i class="dot dot-weekly"></i>Weekly gathering</span>
+              <span><i class="dot dot-event"></i>Special event</span>
+            </div>
+          </div>
+
+          <div class="cal-side">
+            <h3 id="day-title">Upcoming</h3>
+            <div id="day-events" class="event-list"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Requests ===== -->
+    <section id="requests" class="section">
+      <div class="wrap narrow">
+        <div class="section-head">
+          <h2>Prayer &amp; questions</h2>
+          <p>
+            Need prayer? Wrestling with a question about faith or life?
+            Send it here – only our leaders will read it, and it stays private.
+          </p>
+        </div>
+
+        <form id="request-form" class="card form" novalidate>
+          <fieldset class="toggle">
+            <legend class="sr-only">What would you like to send?</legend>
+            <label><input type="radio" name="kind" value="prayer" checked><span>🙏 Prayer request</span></label>
+            <label><input type="radio" name="kind" value="question"><span>💬 Ask a question</span></label>
+          </fieldset>
+
+          <label class="field">
+            <span id="msg-label">Your prayer request</span>
+            <textarea name="message" rows="6" maxlength="4000" required
+              placeholder="Share as much or as little as you like…"></textarea>
+          </label>
+
+          <div class="field-row">
+            <label class="field">
+              <span>Name <em>(optional)</em></span>
+              <input type="text" name="name" maxlength="80" autocomplete="name" placeholder="Leave blank to stay anonymous">
+            </label>
+            <label class="field">
+              <span>Email or phone <em>(optional)</em></span>
+              <input type="text" name="contact" maxlength="120" autocomplete="email" placeholder="If you'd like a reply">
+            </label>
+          </div>
+
+          <!-- spam trap: real people never see or fill this -->
+          <label class="hp" aria-hidden="true">Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+
+          <button type="submit" class="btn">Send</button>
+          <p id="form-status" class="form-status" role="status"></p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <p>© <span id="year"></span> Living Culture · All glory to Jesus Christ, our Lord and Saviour.</p>
+      <a href="admin.html" class="footer-admin">Leader login</a>
     </div>
-    
-    <script src="Index.js"></script>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>
