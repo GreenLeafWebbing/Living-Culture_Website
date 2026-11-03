@@ -172,7 +172,11 @@ function wireAuth(){
  });
 }
 function setupTurnstile(){
- if(!cfg.turnstileSiteKey)return;
+ if(!cfg.turnstileSiteKey){
+   $("inquiry-submit").disabled=false;
+   status("inquiry-status","Ready to receive your confidential message. This form is rate-limited for safety.");
+   return;
+ }
  const script=document.createElement("script");
  script.src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
  script.async=true;
@@ -190,7 +194,7 @@ function setupTurnstile(){
 }
 function wireRequests(){
  $("inquiry-form").addEventListener("submit",async e=>{
-  e.preventDefault();if(!captchaToken){status("inquiry-status","Please complete human verification.");return;}
+  e.preventDefault();if(cfg.turnstileSiteKey && !captchaToken){status("inquiry-status","Please complete human verification.");return;}
   const btn=$("inquiry-submit");btn.disabled=true;status("inquiry-status","Sending securely...");
   const f=new FormData(e.currentTarget);
   try{
@@ -208,7 +212,7 @@ function wireRequests(){
     if(resp.ok)e.currentTarget.reset();
   }catch(err){status("inquiry-status","Could not connect. Please try again later.");}
   captchaToken="";
-  if(window.turnstile)window.turnstile.reset("#captcha-area");
+  if(window.turnstile && cfg.turnstileSiteKey)window.turnstile.reset("#captcha-area");
   btn.disabled=false;
  });
 }
